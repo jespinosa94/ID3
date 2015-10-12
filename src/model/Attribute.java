@@ -85,28 +85,8 @@ public class Attribute {
 					possibleValues.get(j).SumNegative();
 			}
 		}
-
-		// for (int i = 0; i < space.size(); i++) {
-		// if (space.get(i).get(target.id)
-		// .equals(target.possibleValues.get(0).GetName()))
-		// pn[0]++;
-		// else
-		// pn[1]++;
-		//
-		// for (int j = 0; j < possibleValues.size(); j++) {
-		// if (possibleValues.get(j).GetName()
-		// .equals(space.get(i).get(id))
-		// && space.get(i).get(target.id)
-		// .equals(target.possibleValues.get(0).GetName())) {
-		// possibleValues.get(j).SumPositive();
-		// } else if (possibleValues.get(j).GetName()
-		// .equals(space.get(i).get(id))
-		// && space.get(i).get(target.id)
-		// .equals(target.possibleValues.get(1).GetName()))
-		// possibleValues.get(j).SumNegative();
-		// }
-		// }
-		// CalculateGain();
+		
+		CalculateGain();
 	}
 
 	private void CalculateGain() {

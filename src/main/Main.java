@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Set;
+//import java.util.Set;
 
 import model.Attribute;
 import model.Node;
@@ -63,7 +63,7 @@ public class Main {
 	}
 
 	private static void AnalyzeTree(Tree dt) {
-		List<List<String>> expressions = new ArrayList<List<String>>();
+//		List<List<String>> expressions = new ArrayList<List<String>>();
 		List<String> path = new ArrayList<String>();
 
 		dt.Traverse(path);
@@ -98,7 +98,7 @@ public class Main {
 		Random r = new Random();
 		int split = r.nextInt(100);
 		int ntr = (split * space.size() / 100);
-		int nval = space.size() - ntr;
+//		int nval = space.size() - ntr;
 		int aux = 0;
 
 		for (int i = 0; i < ntr; i++)
@@ -119,8 +119,19 @@ public class Main {
 		Node root = new Node();
 		int bestAttr = 0;
 		if (AllEqual(training, target)) {
-			root.label = target.getPossibleValues().get(0).GetName();
-			root.a = target;
+			Integer[] aux = training.keySet().toArray(new Integer[0]);
+//			System.out.println(training.get(aux[0]).get(target.getId()));
+			if(training.get(aux[0]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName()))
+			{
+				root.label = target.getPossibleValues().get(0).GetName();
+				root.a = target;
+			}
+			else
+			{
+				root.label = target.getPossibleValues().get(1).GetName();
+				root.a = target;
+			}
+			
 		}
 
 		else if (attributes.isEmpty()) {
