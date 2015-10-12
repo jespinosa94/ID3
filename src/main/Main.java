@@ -1,9 +1,9 @@
-package Mains;
+package main;
 
 public class Main {
 
 	public static void main(String[] args) {
-		System.out.println("Prueba en windows");
+		System.out.println("ola");
 
 	}
 
