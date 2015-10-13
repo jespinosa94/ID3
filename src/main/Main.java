@@ -25,6 +25,7 @@ public class Main {
 		List<Attribute> attributes = new ArrayList<Attribute>();
 		Attribute target = new Attribute();
 		Tree decisionTree = new Tree();
+		ArrayList<List<String>> expressions = new ArrayList<List<String>>();
 
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
@@ -57,20 +58,28 @@ public class Main {
 			attributes.get(i).SetValues(space/***** training */
 			, target);
 		}
-		decisionTree.root = ID3(space/***** training */
-		, target, attributes, new Node());
-		AnalyzeTree(decisionTree);
+		
+		decisionTree.root = ID3(space/***** training */, target, attributes, new Node());
+				
+		/*
+		 * Set the tree in expressions
+		 */
+		expressions = decisionTree.Traverse(expressions, new ArrayList<String>());
+		/*
+		 * delete duplicates
+		 */
+		for(int i=0; i<expressions.size(); i++){
+			Object[] aux = expressions.get(i).toArray();
+			for(Object s : aux){
+				if(expressions.get(i).indexOf(s) != expressions.get(i).lastIndexOf(s)){
+					expressions.get(i).remove(expressions.get(i).lastIndexOf(s));
+				}
+			}
+			
+			System.out.println(expressions.get(i));
+		}
 
 		System.out.println("finished");
-	}
-
-	private static void AnalyzeTree(Tree dt) {
-//		List<List<String>> expressions = new ArrayList<List<String>>();
-		List<String> path = new ArrayList<String>();
-
-		dt.Traverse(path, numLabels);
-		System.out.println(path);
-
 	}
 
 	public static Map<Integer, List<String>> ReadFile(String arg) throws IOException {
@@ -137,7 +146,6 @@ public class Main {
 			}
 			
 		}
-
 		else if (attributes.isEmpty()) {
 			if (target.getPn()[0] > target.getPn()[1]) {
 				numLabels++;
@@ -158,7 +166,8 @@ public class Main {
 			 * Creation of the attribute sons
 			 */
 			for (int j = 0; j < root.a.getPossibleValues().size(); j++) {
-				root.sons.add(new Tree());
+				root.sons.add(new Tree(root));
+//				root.sons.get(j).parent = parent;
 				root.sons.get(j).root.v = root.a.getPossibleValues().get(j);
 				/*
 				 * Examples vi converting in the examples that have value vi for
@@ -174,7 +183,7 @@ public class Main {
 				}
 				if (root.sons.get(j).root.examples.isEmpty()) {
 					Tree tr = new Tree();
-					tr.parent = parent;
+//					tr.parent = parent;
 					if (target.getPn()[0] > target.getPn()[1]) {
 						numLabels++;
 						tr.root.label = target.getPossibleValues().get(0).GetName();
@@ -189,10 +198,11 @@ public class Main {
 
 					root.sons.get(j).root.sons.add(tr);
 				} else {
-					Tree tr = new Tree();
-					tr.parent = parent;
+					Tree tr = new Tree(root.sons.get(j).root);
+//					tr.parent = parent;
 					tr.root = ID3(root.sons.get(j).root.examples, target, attributes, root);
 					root.sons.get(j).root.sons.add(tr);
+//					root.sons.get(j).root.sons.get(0).parent = root.sons.get(j).root;
 				}
 			}
 		}

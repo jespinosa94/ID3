@@ -11,40 +11,47 @@ public class Tree {
 
 	}
 
-	public String AuxTraverse() {
-		String s = null;
-
-		if (root.label == null) {
-
-		}
-
-		return s;
+	public Tree(Node root2) {
+		parent = root2;
 	}
 
-	public List<String> Traverse(List<String> expression, int numLabels) {
+	public ArrayList<List<String>> Traverse(ArrayList<List<String>> expressions, List<String> s) {
 		if(root.label!=null){
-			expression.add(Integer.toString(root.a.getId()));
-			expression.add(root.label);
+			s.add(Integer.toString(root.a.getId()));
+			s.add(root.label);
+			List<String> c = new ArrayList<String>();
+			for(int i=0; i<s.size(); i++){
+				c.add(s.get(i));
+			}
+			expressions.add(c);
+			s.removeAll(s);
 		}
 		else{
-			if(root.v.GetName()==null){
-				expression.add(Integer.toString(root.a.getId()));
-			}
-			else{
-				expression.add(root.v.GetName());
-			}
-			
 			for(int i=0; i<root.sons.size(); i++){
-				if(parent.a.getId()!=-1){
-					expression.add(Integer.toString(parent.a.getId()));
+//				root.sons.get(i).parent = root;
+				if(parent.v.GetName()!=null || parent.a.getId()!=-1){
+					if(parent.a.getId()!=-1)
+						s.add(Integer.toString(parent.a.getId()));
+					if(parent.v.GetName()!=null){
+						s.add(expressions.get(i).get(0));
+						s.add(parent.v.GetName());
+					}
+						
 				}
-				root.sons.get(i).Traverse(expression, numLabels);
+				s.add(Integer.toString(root.a.getId()));
+				s.add(root.sons.get(i).root.v.GetName());
 				
-				
+				root.sons.get(i).root.sons.get(0).Traverse(expressions, s);
 			}
 		}
 
-		return expression;
+		return expressions;
+	}
+
+	private List<String> Extract(List<String> s) {
+
+		
+		return s;
 	}
 
 	public String toString() {
