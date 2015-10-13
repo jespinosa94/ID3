@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Tree {
 	public Node root = new Node();
+	public Node parent = new Node();
 
 	public Tree() {
 
@@ -20,18 +21,27 @@ public class Tree {
 		return s;
 	}
 
-	public List<String> Traverse(List<String> expression) {
-		for (int i = 0; i < root.sons.size(); i++) {
-			if (root.a.getId() != -1) {
+	public List<String> Traverse(List<String> expression, int numLabels) {
+		if(root.label!=null){
+			expression.add(Integer.toString(root.a.getId()));
+			expression.add(root.label);
+		}
+		else{
+			if(root.v.GetName()==null){
 				expression.add(Integer.toString(root.a.getId()));
-				root.sons.get(i).Traverse(expression);
-
-			} else if (root.v.GetName() != null) {
+			}
+			else{
 				expression.add(root.v.GetName());
-				root.sons.get(i).Traverse(expression);
-
-			} else
-				root.sons.get(i).Traverse(expression);
+			}
+			
+			for(int i=0; i<root.sons.size(); i++){
+				if(parent.a.getId()!=-1){
+					expression.add(Integer.toString(parent.a.getId()));
+				}
+				root.sons.get(i).Traverse(expression, numLabels);
+				
+				
+			}
 		}
 
 		return expression;

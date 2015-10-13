@@ -15,7 +15,9 @@ import model.Attribute;
 import model.Node;
 import model.Tree;
 
+
 public class Main {
+	static int numLabels=0;
 	public static void main(String[] args) throws IOException {
 		Map<Integer, List<String>> space = new HashMap<Integer, List<String>>();
 		Map<Integer, List<String>> training = new HashMap<Integer, List<String>>();
@@ -56,7 +58,7 @@ public class Main {
 			, target);
 		}
 		decisionTree.root = ID3(space/***** training */
-		, target, attributes);
+		, target, attributes, new Node());
 		AnalyzeTree(decisionTree);
 
 		System.out.println("finished");
@@ -66,7 +68,7 @@ public class Main {
 //		List<List<String>> expressions = new ArrayList<List<String>>();
 		List<String> path = new ArrayList<String>();
 
-		dt.Traverse(path);
+		dt.Traverse(path, numLabels);
 		System.out.println(path);
 
 	}
@@ -115,7 +117,7 @@ public class Main {
 		}
 	}
 
-	private static Node ID3(Map<Integer, List<String>> training, Attribute target, List<Attribute> attributes) {
+	private static Node ID3(Map<Integer, List<String>> training, Attribute target, List<Attribute> attributes, Node parent) {
 		Node root = new Node();
 		int bestAttr = 0;
 		if (AllEqual(training, target)) {
@@ -123,11 +125,13 @@ public class Main {
 //			System.out.println(training.get(aux[0]).get(target.getId()));
 			if(training.get(aux[0]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName()))
 			{
+				numLabels++;
 				root.label = target.getPossibleValues().get(0).GetName();
 				root.a = target;
 			}
 			else
 			{
+				numLabels++;
 				root.label = target.getPossibleValues().get(1).GetName();
 				root.a = target;
 			}
@@ -136,9 +140,11 @@ public class Main {
 
 		else if (attributes.isEmpty()) {
 			if (target.getPn()[0] > target.getPn()[1]) {
+				numLabels++;
 				root.label = target.getPossibleValues().get(0).GetName();
 				root.a = target;
 			} else {
+				numLabels++;
 				root.label = target.getPossibleValues().get(1).GetName();
 				root.a = target;
 			}
@@ -168,12 +174,15 @@ public class Main {
 				}
 				if (root.sons.get(j).root.examples.isEmpty()) {
 					Tree tr = new Tree();
+					tr.parent = parent;
 					if (target.getPn()[0] > target.getPn()[1]) {
+						numLabels++;
 						tr.root.label = target.getPossibleValues().get(0).GetName();
 						tr.root.a = target;
 					}
 
 					else {
+						numLabels++;
 						tr.root.label = target.getPossibleValues().get(1).GetName();
 						tr.root.a = target;
 					}
@@ -181,7 +190,8 @@ public class Main {
 					root.sons.get(j).root.sons.add(tr);
 				} else {
 					Tree tr = new Tree();
-					tr.root = ID3(root.sons.get(j).root.examples, target, attributes);
+					tr.parent = parent;
+					tr.root = ID3(root.sons.get(j).root.examples, target, attributes, root);
 					root.sons.get(j).root.sons.add(tr);
 				}
 			}
