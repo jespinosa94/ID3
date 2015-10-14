@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -15,10 +16,11 @@ import model.Attribute;
 import model.Node;
 import model.Tree;
 
-
 public class Main {
-	static int numLabels=0;
+	static int numLabels = 0;
+
 	public static void main(String[] args) throws IOException {
+		float fraction = 0;
 		Map<Integer, List<String>> space = new HashMap<Integer, List<String>>();
 		Map<Integer, List<String>> training = new HashMap<Integer, List<String>>();
 		Map<Integer, List<String>> validation = new HashMap<Integer, List<String>>();
@@ -26,27 +28,24 @@ public class Main {
 		Attribute target = new Attribute();
 		Tree decisionTree = new Tree();
 		ArrayList<List<String>> expressions = new ArrayList<List<String>>();
+		float accuracy=0, sensitivity=0, specificity=0;
 
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
 
 			if (i == 0) {
 				space = ReadFile(arg);
-				ConstructSets(space, training, validation);
-				SetAttributes(training, attributes);
+
+				SetAttributes(space, attributes);
 			}
 			if (i == 1) {
 				target = new Attribute(attributes.get(Integer.parseInt(arg)));
-				target.setTar(true);
-				target.SetValues(space /***** training */
-				, target);
-				target.setPN(space/***** training */
-				, target);
+
 				// System.out.println(target);
 				attributes.remove(Integer.parseInt(arg));
 			}
 			if (i == 2) {
-				float fraction = Float.parseFloat(arg);
+				fraction = Float.parseFloat(arg);
 				if (fraction >= 0 && fraction <= 1) {
 					// reduced-error prunning
 				} else
@@ -54,13 +53,33 @@ public class Main {
 			}
 		}
 
+		ConstructSets(space, training, validation, fraction);
+
+		target.setTar(true);
+		target.SetValues(training, target);
+		target.setPN(training, target);
+
 		for (int i = 0; i < attributes.size(); i++) {
-			attributes.get(i).SetValues(space/***** training */
-			, target);
+			attributes.get(i).SetValues(training, target);
 		}
-		
-		decisionTree.root = ID3(space/***** training */, target, attributes, new Node());
-				
+
+		decisionTree.root = ID3(training, target, attributes, new Node());
+
+		CalculateExpressions(expressions, decisionTree);
+		System.out.println("-----------------------Before the pruning-------------------------------");
+		ShowExpressions(expressions);
+		accuracy = Accuracy(expressions, training, target);
+		System.out.println("Accuracy for the training set: " + accuracy);
+		accuracy =Accuracy(expressions, validation, target);
+		System.out.println("Accuracy for the validation set: " + accuracy);
+		 
+		Pruning(expressions, validation, target, accuracy);
+		System.out.println("-----------------------After the pruning-------------------------------");
+
+		System.out.println("finished");
+	}
+
+	private static void CalculateExpressions(ArrayList<List<String>> expressions, Tree decisionTree) {
 		/*
 		 * Set the tree in expressions
 		 */
@@ -68,18 +87,83 @@ public class Main {
 		/*
 		 * delete duplicates
 		 */
-		for(int i=0; i<expressions.size(); i++){
+		for (int i = 0; i < expressions.size(); i++) {
 			Object[] aux = expressions.get(i).toArray();
-			for(Object s : aux){
-				if(expressions.get(i).indexOf(s) != expressions.get(i).lastIndexOf(s)){
+			for (Object s : aux) {
+				if (expressions.get(i).indexOf(s) != expressions.get(i).lastIndexOf(s)) {
 					expressions.get(i).remove(expressions.get(i).lastIndexOf(s));
 				}
 			}
-			
+		}
+	}
+
+	private static void ShowExpressions(ArrayList<List<String>> expressions) {
+		for(int i=0; i< expressions.size(); i++){
 			System.out.println(expressions.get(i));
 		}
+		
+	}
 
-		System.out.println("finished");
+	private static float Accuracy(ArrayList<List<String>> expressions, Map<Integer, List<String>> validation, Attribute target) {
+		int TP = 0, FP = 0, TN = 0, FN = 0;
+		float accuracy=0, sensitivity=0, specificity=0; 
+		
+//		System.out.println(validation);
+		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
+		for(int i=0; i<expressions.size(); i++){
+			List<String> a = new ArrayList<String>();
+			for(int j=1; j<expressions.get(i).size(); j+=2){
+				a.add(expressions.get(i).get(j));
+			}
+			auxE.add(a);
+		}
+		
+		Integer aux[] = validation.keySet().toArray(new Integer[0]);
+		for(int i=0; i<aux.length; i++){
+//			System.out.println(validation.get(aux[i]));
+			boolean noCount = false;
+			for(int j=0; j<auxE.size(); j++){
+//				System.out.println(auxE.get(j));
+				if(validation.get(aux[i]).containsAll(auxE.get(j))){
+					if(validation.get(aux[i]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName())){
+						TP++;
+						noCount = true;
+					}
+					else
+						TN++;
+					noCount=true;
+				}
+			}
+			if(validation.get(aux[i]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName()) && !noCount){
+				FP++;
+			}
+			else if(!noCount)
+				FN++;
+		}
+		
+		accuracy = (float) TP/(TP+FP);
+		
+		return accuracy;
+	}
+
+	private static void Pruning(ArrayList<List<String>> expressions, Map<Integer, List<String>> validation, Attribute target, float accuracy) {
+		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
+		float estimatedAccuracy = 0;
+		
+		for(int i=0; i<expressions.size(); i++){
+			List<String> a = new ArrayList<String>();
+			for(int j=1; j<expressions.get(i).size(); j+=2){
+				a.add(expressions.get(i).get(j));
+			}
+			auxE.add(a);
+		}
+		
+		for(int i=0; i<auxE.size(); i++){
+			for(Iterator<String> it = auxE.get(i).iterator(); it.hasNext();){
+				String s = it.next();
+				it.remove();
+			}
+		}
 	}
 
 	public static Map<Integer, List<String>> ReadFile(String arg) throws IOException {
@@ -105,11 +189,14 @@ public class Main {
 	}
 
 	public static void ConstructSets(Map<Integer, List<String>> space, Map<Integer, List<String>> training,
-			Map<Integer, List<String>> validation) {
-		Random r = new Random();
-		int split = r.nextInt(100);
+			Map<Integer, List<String>> validation, float fraction) {
+		int split = (int) (fraction * 100);
+
+		/*
+		 * Random r = new Random(); int split = r.nextInt(100);
+		 */
 		int ntr = (split * space.size() / 100);
-//		int nval = space.size() - ntr;
+		// int nval = space.size() - ntr;
 		int aux = 0;
 
 		for (int i = 0; i < ntr; i++)
@@ -126,27 +213,24 @@ public class Main {
 		}
 	}
 
-	private static Node ID3(Map<Integer, List<String>> training, Attribute target, List<Attribute> attributes, Node parent) {
+	private static Node ID3(Map<Integer, List<String>> training, Attribute target, List<Attribute> attributes,
+			Node parent) {
 		Node root = new Node();
 		int bestAttr = 0;
 		if (AllEqual(training, target)) {
 			Integer[] aux = training.keySet().toArray(new Integer[0]);
-//			System.out.println(training.get(aux[0]).get(target.getId()));
-			if(training.get(aux[0]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName()))
-			{
+			// System.out.println(training.get(aux[0]).get(target.getId()));
+			if (training.get(aux[0]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName())) {
 				numLabels++;
 				root.label = target.getPossibleValues().get(0).GetName();
 				root.a = target;
-			}
-			else
-			{
+			} else {
 				numLabels++;
 				root.label = target.getPossibleValues().get(1).GetName();
 				root.a = target;
 			}
-			
-		}
-		else if (attributes.isEmpty()) {
+
+		} else if (attributes.isEmpty()) {
 			if (target.getPn()[0] > target.getPn()[1]) {
 				numLabels++;
 				root.label = target.getPossibleValues().get(0).GetName();
@@ -167,7 +251,7 @@ public class Main {
 			 */
 			for (int j = 0; j < root.a.getPossibleValues().size(); j++) {
 				root.sons.add(new Tree(root));
-//				root.sons.get(j).parent = parent;
+				// root.sons.get(j).parent = parent;
 				root.sons.get(j).root.v = root.a.getPossibleValues().get(j);
 				/*
 				 * Examples vi converting in the examples that have value vi for
@@ -183,7 +267,7 @@ public class Main {
 				}
 				if (root.sons.get(j).root.examples.isEmpty()) {
 					Tree tr = new Tree();
-//					tr.parent = parent;
+					// tr.parent = parent;
 					if (target.getPn()[0] > target.getPn()[1]) {
 						numLabels++;
 						tr.root.label = target.getPossibleValues().get(0).GetName();
@@ -199,10 +283,11 @@ public class Main {
 					root.sons.get(j).root.sons.add(tr);
 				} else {
 					Tree tr = new Tree(root.sons.get(j).root);
-//					tr.parent = parent;
+					// tr.parent = parent;
 					tr.root = ID3(root.sons.get(j).root.examples, target, attributes, root);
 					root.sons.get(j).root.sons.add(tr);
-//					root.sons.get(j).root.sons.get(0).parent = root.sons.get(j).root;
+					// root.sons.get(j).root.sons.get(0).parent =
+					// root.sons.get(j).root;
 				}
 			}
 		}

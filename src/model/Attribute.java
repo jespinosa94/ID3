@@ -69,7 +69,7 @@ public class Attribute {
 
 	public void setPN(Map<Integer, List<String>> space, Attribute target) {
 		Integer[] aux = space.keySet().toArray(new Integer[0]);
-
+		
 		for (int i = 0; i < aux.length; i++) {
 			if (space.get(aux[i]).get(target.id).equals(target.possibleValues.get(0).GetName()))
 				pn[0]++;
@@ -87,6 +87,7 @@ public class Attribute {
 		}
 		
 		CalculateGain();
+		
 	}
 
 	private void CalculateGain() {
