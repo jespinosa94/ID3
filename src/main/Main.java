@@ -29,6 +29,7 @@ public class Main {
 		Tree decisionTree = new Tree();
 		ArrayList<List<String>> expressions = new ArrayList<List<String>>();
 		float accuracy=0, sensitivity=0, specificity=0;
+		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
 
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
@@ -66,17 +67,72 @@ public class Main {
 		decisionTree.root = ID3(training, target, attributes, new Node());
 
 		CalculateExpressions(expressions, decisionTree);
+		auxE = ProcessExpressions(expressions);
 		System.out.println("-----------------------Before the pruning-------------------------------");
 		ShowExpressions(expressions);
-		accuracy = Accuracy(expressions, training, target);
+		accuracy = Accuracy(auxE, training, target);
 		System.out.println("Accuracy for the training set: " + accuracy);
-		accuracy =Accuracy(expressions, validation, target);
+		accuracy =Accuracy(auxE, validation, target);
 		System.out.println("Accuracy for the validation set: " + accuracy);
 		 
 		Pruning(expressions, validation, target, accuracy);
 		System.out.println("-----------------------After the pruning-------------------------------");
-
+		ShowExpressions(expressions);
+		accuracy = Accuracy(auxE, training, target);
+		System.out.println("Accuracy for the training set: " + accuracy);
+		accuracy =Accuracy(auxE, validation, target);
+		System.out.println("Accuracy for the validation set: " + accuracy);
+		float[] pack = SS(auxE, validation, target); 	//Calculates sensitivity and specificity
+		sensitivity = pack[0];
+		specificity = pack[1];
+		System.out.println("Sensitivity: " + sensitivity);
+		System.out.println("Specificity: " + specificity);
+		
 		System.out.println("finished");
+	}
+
+	private static float[] SS(ArrayList<List<String>> auxE, Map<Integer, List<String>> validation, Attribute target) {
+		int TP = 0, FP = 0, TN = 0, FN = 0;
+		float sensitivity=0, specificity=0; 
+		
+		Integer aux[] = validation.keySet().toArray(new Integer[0]);
+		for(int i=0; i<aux.length; i++){
+//			System.out.println(validation.get(aux[i]));
+			boolean noCount = false;
+			for(int j=0; j<auxE.size(); j++){
+//				System.out.println(auxE.get(j));
+				if(validation.get(aux[i]).containsAll(auxE.get(j))){
+					if(validation.get(aux[i]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName())){
+						TP++;
+						noCount = true;
+					}
+					else
+						TN++;
+					noCount=true;
+				}
+			}
+			if(validation.get(aux[i]).get(target.getId()).equals(target.getPossibleValues().get(0).GetName()) && !noCount){
+				FP++;
+			}
+			else if(!noCount)
+				FN++;
+		}
+		sensitivity = (float) TP/(TP+FN);
+		specificity = (float) TN/(TN+FP);
+		return new float[] {sensitivity, specificity};
+	}
+
+	private static ArrayList<List<String>> ProcessExpressions(ArrayList<List<String>> expressions) {
+//		System.out.println(validation);
+		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
+		for(int i=0; i<expressions.size(); i++){
+			List<String> a = new ArrayList<String>();
+			for(int j=1; j<expressions.get(i).size(); j+=2){
+				a.add(expressions.get(i).get(j));
+			}
+			auxE.add(a);
+		}
+		return auxE;
 	}
 
 	private static void CalculateExpressions(ArrayList<List<String>> expressions, Tree decisionTree) {
@@ -104,19 +160,9 @@ public class Main {
 		
 	}
 
-	private static float Accuracy(ArrayList<List<String>> expressions, Map<Integer, List<String>> validation, Attribute target) {
+	private static float Accuracy(ArrayList<List<String>> auxE, Map<Integer, List<String>> validation, Attribute target) {
 		int TP = 0, FP = 0, TN = 0, FN = 0;
 		float accuracy=0, sensitivity=0, specificity=0; 
-		
-//		System.out.println(validation);
-		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
-		for(int i=0; i<expressions.size(); i++){
-			List<String> a = new ArrayList<String>();
-			for(int j=1; j<expressions.get(i).size(); j+=2){
-				a.add(expressions.get(i).get(j));
-			}
-			auxE.add(a);
-		}
 		
 		Integer aux[] = validation.keySet().toArray(new Integer[0]);
 		for(int i=0; i<aux.length; i++){
@@ -148,6 +194,7 @@ public class Main {
 
 	private static void Pruning(ArrayList<List<String>> expressions, Map<Integer, List<String>> validation, Attribute target, float accuracy) {
 		ArrayList<List<String>> auxE = new ArrayList<List<String>>();
+		ArrayList<List<String>> pruned = new ArrayList<List<String>>();
 		float estimatedAccuracy = 0;
 		
 		for(int i=0; i<expressions.size(); i++){
@@ -159,11 +206,40 @@ public class Main {
 		}
 		
 		for(int i=0; i<auxE.size(); i++){
-			for(Iterator<String> it = auxE.get(i).iterator(); it.hasNext();){
-				String s = it.next();
-				it.remove();
+			for(int j=0; j<auxE.get(i).size(); j++){
+				pruned = CreateAux(auxE);
+				pruned.remove(auxE.get(i).get(j));
+				estimatedAccuracy = Accuracy(pruned, validation, target);
+				if(estimatedAccuracy > accuracy && auxE.get(i).size()>2){
+					//delete el real de expressions, hay que sacarlo primero y despues llamar al metodo recursivamente
+					expressions.get(i).remove(expressions.get(i).indexOf(auxE.get(i).get(j))-1);
+					expressions.get(i).remove(expressions.get(i).indexOf(auxE.get(i).get(j)));
+					Pruning(expressions, validation, target, estimatedAccuracy);
+					
+//					expressions.get(i).remove(expressions.get(i).get(expressions.get(i).indexOf(auxE.get(i).get(j))-1));
+//					expressions.get(i).remove(expressions.get(i).get(expressions.get(i).indexOf(auxE.get(i).get(j))));
+//					Pruning(expressions, validation, target, estimatedAccuracy);
+//					System.out.println(expressions.get(i).get(expressions.get(i).indexOf(auxE.get(i).get(j))));
+				}
 			}
 		}
+		
+//		System.out.println(auxE);
+//		System.out.println(pruned);
+		
+	}
+
+
+	private static ArrayList<List<String>> CreateAux(ArrayList<List<String>> auxE) {
+		ArrayList<List<String>> pruned = new ArrayList<List<String>>();
+		for(int i=0; i < auxE.size(); i++){
+			List<String> a = new ArrayList<String>();
+			for(int j=0; j<auxE.get(i).size(); j++){
+				a.add(auxE.get(i).get(j));
+			}
+			pruned.add(a);
+		}
+		return pruned;
 	}
 
 	public static Map<Integer, List<String>> ReadFile(String arg) throws IOException {
