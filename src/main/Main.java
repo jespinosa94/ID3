@@ -63,7 +63,6 @@ public class Main {
 		for (int i = 0; i < attributes.size(); i++) {
 			attributes.get(i).SetValues(training, target);
 		}
-
 		decisionTree.root = ID3(training, target, attributes, new Node());
 
 		CalculateExpressions(expressions, decisionTree);
@@ -229,7 +228,6 @@ public class Main {
 		
 	}
 
-
 	private static ArrayList<List<String>> CreateAux(ArrayList<List<String>> auxE) {
 		ArrayList<List<String>> pruned = new ArrayList<List<String>>();
 		for(int i=0; i < auxE.size(); i++){
@@ -266,21 +264,36 @@ public class Main {
 
 	public static void ConstructSets(Map<Integer, List<String>> space, Map<Integer, List<String>> training,
 			Map<Integer, List<String>> validation, float fraction) {
-		int split = (int) (fraction * 100);
-
-		/*
-		 * Random r = new Random(); int split = r.nextInt(100);
-		 */
+		Random r = new Random();
+		int put = r.nextInt(space.size());
+		int split = (int) (fraction*100);
 		int ntr = (split * space.size() / 100);
-		// int nval = space.size() - ntr;
-		int aux = 0;
-
-		for (int i = 0; i < ntr; i++)
-			training.put(i, space.get(i));
-		for (int j = ntr; j < space.size(); j++) {
+		int aux=0;
+		
+		for(int i=0; i<ntr; i++){
+			training.put(i, space.get(put));
+			put = r.nextInt(space.size());
+		}
+		for(int j=ntr; j<space.size(); j++){
 			validation.put(aux, space.get(j));
 			aux++;
 		}
+		
+		
+		
+//		int split = (int) (fraction * 100);
+//		Random r = new Random(); 
+////		int split = r.nextInt(100);
+//		int ntr = (split * space.size() / 100);
+//		// int nval = space.size() - ntr;
+//		int aux = 0;
+//
+//		for (int i = 0; i < ntr; i++)
+//			training.put(i, space.get(i));
+//		for (int j = ntr; j < space.size(); j++) {
+//			validation.put(aux, space.get(j));
+//			aux++;
+//		}
 	}
 
 	private static void SetAttributes(Map<Integer, List<String>> training, List<Attribute> attributes) {
