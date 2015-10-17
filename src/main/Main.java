@@ -68,7 +68,7 @@ public class Main {
 		CalculateExpressions(expressions, decisionTree);
 		auxE = ProcessExpressions(expressions);
 		System.out.println("-----------------------Before the pruning-------------------------------");
-		ShowExpressions(expressions);
+		ShowExpressions(expressions, target);
 		accuracy = Accuracy(auxE, training, target);
 		System.out.println("Accuracy for the training set: " + accuracy);
 		accuracy =Accuracy(auxE, validation, target);
@@ -76,7 +76,7 @@ public class Main {
 		 
 		Pruning(expressions, validation, target, accuracy);
 		System.out.println("-----------------------After the pruning-------------------------------");
-		ShowExpressions(expressions);
+		ShowExpressions(expressions, target);
 		accuracy = Accuracy(auxE, training, target);
 		System.out.println("Accuracy for the training set: " + accuracy);
 		accuracy =Accuracy(auxE, validation, target);
@@ -152,10 +152,28 @@ public class Main {
 		}
 	}
 
-	private static void ShowExpressions(ArrayList<List<String>> expressions) {
+	private static void ShowExpressions(ArrayList<List<String>> expressions, Attribute target) {
 		for(int i=0; i< expressions.size(); i++){
 			System.out.println(expressions.get(i));
 		}
+		
+//		for(int i=0; i<expressions.size(); i++){
+//			for(int j=0; j<expressions.get(i).size(); j++){
+//				
+//				if(Integer.parseInt(expressions.get(i).get(j))){
+//					if(j%2==0 && Integer.parseInt(expressions.get(i).get(j)) == target.getId()){
+//						System.out.println("--> " + expressions.get(i).get(j) + " = " + expressions.get(i).get(j+=1));
+//					}
+//					if(j%2==0 && Integer.parseInt(expressions.get(i).get(j)) != target.getId()  ){
+//						System.out.print("<" + expressions.get(i).get(j) + " = " + expressions.get(i).get(j+=1) + "> AND ");
+//					}
+////					else if(){
+////						System.out.print(" = " + expressions.get(i).get(j));
+////						System.out.print("> AND ");
+////					}
+//				}
+//			}
+//		}
 		
 	}
 
