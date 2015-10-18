@@ -153,10 +153,24 @@ public class Main {
 	}
 
 	private static void ShowExpressions(ArrayList<List<String>> expressions, Attribute target) {
-		for(int i=0; i< expressions.size(); i++){
-			System.out.println(expressions.get(i));
+//		for(int i=0; i< expressions.size(); i++){
+//			System.out.println(expressions.get(i));
+//		}
+		for(int i=0; i<expressions.size(); i++){
+			for(int j=0; j<expressions.get(i).size()-2; j++){
+				if(j%2==0){
+					System.out.print("<" + expressions.get(i).get(j));
+				}
+				else{
+					System.out.print(" = "+ expressions.get(i).get(j) + "> ");
+					if(j<expressions.get(i).size()-4){
+						System.out.print("AND ");
+					}
+				}
+				
+			}
+			System.out.println("--> " + expressions.get(i).get(expressions.get(i).size()-2) + " = " + expressions.get(i).get(expressions.get(i).size()-1));
 		}
-		
 //		for(int i=0; i<expressions.size(); i++){
 //			for(int j=0; j<expressions.get(i).size(); j++){
 //				
